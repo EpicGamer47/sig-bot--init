@@ -5,7 +5,6 @@ from discord import app_commands
 import json
 from dotenv import load_dotenv
 import os
-import asyncio
 
 load_dotenv()
 
@@ -76,14 +75,17 @@ class MyHelpCommand(commands.HelpCommand):
             )
         await self.get_destination().send(embed=embed)
 
-with open("data/prefixes.json") as p:
+with open("data/prefixes.json", "r") as p:
     prefixes = json.load(p)
 
-with open("data/data.json") as f:
+with open("data/data.json", "r") as f:
     bot_data = json.load(f)
 
-with open("data/attendance.json") as f:
+with open("data/attendance.json", "r") as f:
     attendance = json.load(f)
+    
+with open("data/stats2.json", "r", encoding="utf-8") as f:
+    stats2 = json.load(f)
 
 default_prefix = ">"
 
@@ -104,6 +106,7 @@ bot = commands.Bot(command_prefix=prefix,
 bot.prefixes = prefixes
 bot.bot_data = bot_data
 bot.attendance = attendance
+bot.stats2 = stats2
 
 async def setup_cogs():
     for filename in os.listdir('./cogs'):
@@ -118,7 +121,7 @@ async def setup_cogs():
 async def on_ready():
     print(f'We have logged in as {bot.user}')
     await setup_cogs()
-    # await bot.tree.sync(guild=discord.Object(id=os.getenv('TEST_GUILD_ID')))
+    await bot.tree.sync(guild=discord.Object(id=os.getenv('TEST_GUILD_ID')))
     await bot.tree.sync()
 
 @bot.event

@@ -3,7 +3,6 @@ from discord.ui import Label, View, Button, Modal, TextInput, Thumbnail
 from discord.ext import commands
 
 class Questionnaire(Modal, title='Questionnaire Response'):
-    name = Label(text='Name', component=Thumbnail(media = discord.File("data/images/horror.png")))
     answer = Label(text='Answer', component=TextInput(style=discord.TextStyle.paragraph))
 
     async def on_submit(self, interaction: discord.Interaction):

@@ -1,12 +1,12 @@
 import discord
-from discord.ui import Label, View, Button, Modal, TextInput, Thumbnail, RoleSelect, UserSelect
+from discord.ui import View, Button, Modal, TextInput, RoleSelect, UserSelect
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 import os
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 import random
 from sheet_updater import update_sheet
