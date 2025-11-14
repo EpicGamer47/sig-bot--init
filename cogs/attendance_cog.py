@@ -101,7 +101,7 @@ class UCIDModal(Modal, title="Check into your meeting!"):
         #     f.write(json.dumps(self.bot.bot_data))
         
 class AttendanceView(View):
-    def __init__(self, bot, ctx: commands.Context, sig: discord.Role, *, timeout=60*60):
+    def __init__(self, bot, ctx: commands.Context, sig: discord.Role, *, timeout=60*90):
         super().__init__(timeout=timeout)
         self.bot = bot
         self.sig = sig
@@ -109,22 +109,28 @@ class AttendanceView(View):
 
         self.check_in_button = Button(
             label=f"Check into {self.sig.name}",  # only way to add signame into button
-            style=discord.ButtonStyle.success,
-            emoji="✅"
+            style=discord.ButtonStyle.green,
+            emoji=f"<{os.getenv('CHECK_IN_EMOJI')}>"
         )
-
         self.check_in_button.callback = self.check_in_callback
         
         self.get_attendance_button = Button(
             label=f"Get Attendance",
-            style=discord.ButtonStyle.secondary,
+            style=discord.ButtonStyle.gray,
             emoji="📜"
         )
-        
         self.get_attendance_button.callback = self.get_attendance_callback
+        
+        self.close_meeting_button= Button(
+            label=f"Close Meeting",
+            style=discord.ButtonStyle.red,
+            emoji="🛑"
+        )
+        self.close_meeting_button.callback = self.close_meeting_callback
 
         self.add_item(self.check_in_button)
         self.add_item(self.get_attendance_button)
+        self.add_item(self.close_meeting_button)
 
     # technically repeated method but this my makes life easier
     async def check_in(self, interaction: discord.Interaction):
@@ -141,6 +147,13 @@ class AttendanceView(View):
             await self.check_in(interaction)
         else:
             await interaction.response.send_modal(UCIDModal(self.bot, self.ctx, self.sig, True))
+            
+    async def close_meeting_callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            f"Closed registration!", ephemeral=True
+        )
+        
+        await self.on_timeout()
             
     async def get_attendance_callback(self, interaction: discord.Interaction):
         sig_key, meeting_key = get_keys(self.sig, self.ctx.message.created_at)
@@ -163,6 +176,20 @@ class AttendanceView(View):
             result, 
             ephemeral=True
         )
+        
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+            
+            if item is discord.ui.Button:   
+                item.style = discord.ButtonStyle.gray 
+
+        # i dont want to clog my error stream
+        if self.message:
+            try:
+                await self.message.edit(view=self)
+            except discord.NotFound:
+                pass
             
 class RoleSelectView(View):
     def __init__(self, callback):
@@ -303,9 +330,12 @@ class AttendanceCog(commands.Cog):
             
         save_json("data/attendance.json", self.bot.attendance)
         
-        await ctx.send(
-            embed=generate_embed(ctx, sig),
-            view=AttendanceView(self.bot, ctx, sig)
+        embed = generate_embed(ctx, sig)
+        view = AttendanceView(self.bot, ctx, sig)
+        
+        view.message = await ctx.send(
+            embed=embed,
+            view=view
         )
 
     @commands.hybrid_command(help="Change your UCID")

@@ -226,7 +226,9 @@ class LeaderboardView(View):
     async def on_timeout(self):
         for item in self.children:
             item.disabled = True
-            item.style = discord.ButtonStyle.gray # WILL error out on menus btw
+            
+            if item is discord.ui.Button:   
+                item.style = discord.ButtonStyle.gray 
 
         # i dont want to clog my error stream
         if self.message:
@@ -243,8 +245,7 @@ class SnipeCog(commands.Cog):
     async def leaderboard(self, ctx: commands.Context):
         view = LeaderboardView(ctx)
         view.message = await ctx.reply(embed=view.generate_embed(), view=view, ephemeral=True)
-        
-        
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SnipeCog(bot))
